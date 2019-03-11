@@ -17,7 +17,6 @@ eval_path = 'logs/evaluationOne' + str(FOV) + 'version' + str(version)
 # set the path's were you want to storage the data(tensorboard and checkpoints)
 batch = 32
 epochs = 1000
-
 number_of_data = 128
 test_samples = number_of_data // 16 * 12
 input_shape = (FOV, FOV, FOV, 1)
@@ -115,7 +114,6 @@ def eval_inputs(features, labels, batch_size):
     # we shuffle the data justo see differente images in tensorboard
     inputs = inputs.shuffle(100).batch(batch_size)
     return inputs
-
 
 def loss_funtion(labels, preds):
     l1 = tf.losses.absolute_difference(labels, preds)

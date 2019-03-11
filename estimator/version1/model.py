@@ -10,7 +10,7 @@ works with 32 bits data, and just real numbers
 """
 
 
-def network(inputs, image_size, training=False):
+def network(inputs):
     # Layer 1
     l1 = conv3d(32, kernel_size=(5, 5, 5), padding='same')(inputs)
     l1 = BatchNormalization()(l1)
