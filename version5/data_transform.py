@@ -1,11 +1,13 @@
 import numpy as np
 from os import walk
-import cv2
-from random import shuffle
 import pickle
 
-FOV = 256
+FOV = 64
 
+
+"""
+Script to transform data from the matlab format to numpy array and save them as python pickle
+"""
 
 def limpiar_linea(linea):
     lista = list(map(float, linea.strip().replace(' ', '').split(',')))
@@ -20,7 +22,7 @@ nombres2 = ['D:/' + str(FOV) + "data/data/" + path for path in nombres2]
 contador = 0
 for i in nombres:
     with open(i, 'r') as file:
-        datos = np.reshape(np.array(list(map(limpiar_linea, file.readlines())), dtype='float32'), [FOV, FOV, FOV, 1])
+        datos = np.reshape(np.array(list(map(limpiar_linea, file.readlines())), dtype='float16'), [FOV, FOV, FOV, 1])
         datos -= np.min(datos)
         datos /= np.max(datos)
     with open('D:/' + str(FOV) + 'data/new_data/' + str(contador) + '.txt', 'wb') as file:
@@ -30,7 +32,7 @@ for i in nombres:
 contador = 0
 for i in nombres2:
     with open(i, 'r') as file:
-        datos = np.reshape(np.array(list(map(limpiar_linea, file.readlines())), dtype='float32'), [FOV, FOV, FOV, 1])
+        datos = np.reshape(np.array(list(map(limpiar_linea, file.readlines())), dtype='float16'), [FOV, FOV, FOV, 1])
         datos -= np.min(datos)
         datos /= np.max(datos)
     with open('D:/' + str(FOV) + 'data/new_dataf/' + str(contador) + '.txt', 'wb') as file:
