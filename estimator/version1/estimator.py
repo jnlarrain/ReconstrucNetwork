@@ -1,30 +1,39 @@
-import tensorflow as tf
-from tensorflow.data import Dataset, Iterator
-from model4 import network
-import pickle
-from os import walk
 import numpy as np
+import tensorflow as tf
+from model4 import network
+from tensorflow.data import Dataset
 
 '''
 main48 tiene 256 samples, batch 32
 '''
 
 version = 1
-FOV = 64
-main_path = 'logs/mainOne' + str(FOV) + 'version' + str(version)
-eval_path = 'logs/evaluationOne' + str(FOV) + 'version' + str(version)
+size = 48
+disk = 'D:/'
+main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
+eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
-batch = 32
+batch = 1
 epochs = 1000
 number_of_data = 128
 test_samples = number_of_data // 16 * 12
-input_shape = (FOV, FOV, FOV, 1)
+input_shape = (size, size, size, 1)
 learning_rate = 1e-3
 B1 = 0.9
 B2 = 0.99
 
+# data = Data(disk, size, number_of_data, batch)
+# data_dict = data.main()
+# train_data = data_dict['train_input']
+# train_labels = data_dict['train_label']
+# test_data = data_dict['test_input']
+# test_labels = data_dict['test_label']
 
+train_data = np.ones((1, *input_shape))
+train_labels = np.ones((1, *input_shape))
+test_data = np.ones((1, *input_shape))
+test_labels = np.ones((1, *input_shape))
 
 
 def train_inputs(features, labels, batch_size, num_shuffles=1000):
@@ -68,7 +77,7 @@ def show_image(preds):
     results:tensor
             tensor of images with bounding boxes. Blue: predicted / Yellow: labeled
     '''
-    result = preds[:, FOV // 2, :, :, :]
+    result = preds[:, size // 2, :, :, :]
     return result
 
 
@@ -94,33 +103,21 @@ def eval_inputs(features, labels, batch_size):
     inputs = inputs.shuffle(100).batch(batch_size)
     return inputs
 
+
 def loss_funtion(labels, preds):
     l1 = tf.losses.absolute_difference(labels, preds)
     l2 = tf.losses.mean_squared_error(labels, preds)
     return l1 + l2
 
+
 def estimator_function(features, labels, mode, params):
-    ''' Estimator function
-
-    Parameters
-    ----------
-    inputs: tensor
-        images and labels, image shape (?, field_of_view, field_of_view, 1)
-        and labels of shape(?, 1, 4)
-    training: boolean
-        determinates if we used the dropout, True: yes / False: no
-
-    Returns
-    -------
-    the estimates values from the tensorflow estimator
-    '''
     if mode == tf.estimator.ModeKeys.PREDICT:
         y_pred = network(features)
         spec = tf.estimator.EstimatorSpec(mode=mode, predictions=y_pred)
     # For training and testing
     else:
         training = mode == tf.estimator.ModeKeys.TRAIN
-        y_pred = network(features, FOV, training)
+        y_pred = network(features, size, training)
         # summary the training image
         prediction_image = tf.summary.image("Prediction",
                                             show_image(y_pred),
@@ -132,7 +129,7 @@ def estimator_function(features, labels, mode, params):
         summary_loss = tf.summary.scalar('loss', loss)
         tf.summary.merge([prediction_image, label_image, summary_loss])
         if training:
-            params["learning_rate"] = params["learning_rate"]*.99
+            params["learning_rate"] = params["learning_rate"] * .99
             # tf.print(loss)
             optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=0.95, beta2=0.999)
             train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
