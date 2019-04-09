@@ -25,27 +25,6 @@ B1 = 0.9
 B2 = 0.99
 
 
-def abrir_data(path):
-    with open(path, 'rb') as file:
-        datos = pickle.load(file)
-        return datos
-
-
-train_data = list(walk('D:/' + str(FOV) + "data/new_data"))[0][2][:number_of_data]
-train_data = ['D:/' + str(FOV) + "data/new_data/" + path for path in train_data[:number_of_data - batch]]
-train_labels = list(walk('D:/' + str(FOV) + "data/new_dataf"))[0][2][:number_of_data]
-train_labels = ['D:/' + str(FOV) + "data/new_dataf/" + path for path in train_labels[:number_of_data - batch]]
-train_data = np.array(list(map(abrir_data, train_data)))
-train_labels = np.array(list(map(abrir_data, train_labels)))
-
-test_data = list(walk('D:/' + str(FOV) + "data/new_data"))[0][2][:number_of_data]
-test_data = ['D:/' + str(FOV) + "data/new_data/" + path for path in test_data[-batch:]]
-test_labels = list(walk('D:/' + str(FOV) + "data/new_dataf"))[0][2][:number_of_data]
-test_labels = ['D:/' + str(FOV) + "data/new_dataf/" + path for path in test_labels[-batch:]]
-test_data = np.array(list(map(abrir_data, test_data)))
-test_labels = np.array(list(map(abrir_data, test_labels)))
-
-print('Data already done there are {} test volumes and {} training volumes'.format(len(test_data), len(train_data)))
 
 
 def train_inputs(features, labels, batch_size, num_shuffles=1000):
