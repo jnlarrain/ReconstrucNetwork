@@ -1,31 +1,32 @@
-import numpy as np
-from load_data import Data
+import tqdm
 import tensorflow as tf
-from model4 import network
+from model import network
 from tfrecords import read_and_decode
+import os
+
+
+os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 
 '''
 main48 tiene 256 samples, batch 32
 '''
 
-version = 1
+version = 2
 size = 48
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
 eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
 
 # tfrecords path
-train_tfrecord_path = disk+str(size)+'data/train_data.tfrecords'
-test_tfrecord_path = disk+str(size)+'data/test_data.tfrecords'
+train_tfrecord_path = disk+str(size)+'data/train_dataL.tfrecords'
+test_tfrecord_path = disk+str(size)+'data/test_dataL.tfrecords'
 
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
-batch = 2
-epochs = 70400
-number_of_data = 128
-test_samples = 32
+batch = 4
+epochs = 20500 #- ( 90 )
 input_shape = (size, size, size, 1)
-learning_rate = 1e-3
+learning_rate = 3e-5
 B1 = 0.9
 B2 = 0.99
 
@@ -48,19 +49,20 @@ def eval_inputs(batch_size):
 
 
 def loss_funtion(labels, preds):
-    l1 = tf.losses.absolute_difference(labels, preds)
+    # l1 = tf.losses.absolute_difference(labels, preds)
     l2 = tf.losses.mean_squared_error(labels, preds)
-    return l1 + l2
+    return l2
 
 
 def estimator_function(features, labels, mode, params):
+    global step
     if mode == tf.estimator.ModeKeys.PREDICT:
         y_pred = network(features)
         spec = tf.estimator.EstimatorSpec(mode=mode, predictions=y_pred)
     # For training and testing
     else:
         training = mode == tf.estimator.ModeKeys.TRAIN
-        y_pred = network(features, size, training)
+        y_pred = network(features)
         # summary the training image
         prediction_image = tf.summary.image("Prediction",
                                             show_image(y_pred),
@@ -68,13 +70,15 @@ def estimator_function(features, labels, mode, params):
         label_image = tf.summary.image("Label",
                                        show_image(labels),
                                        max_outputs=8)
-        loss = loss_funtion(labels, y_pred)
+        input_image = tf.summary.image("Input",
+                                       show_image(features),
+                                       max_outputs=8)
+        loss = loss_funtion(tf.cast(labels, tf.float32), tf.cast(y_pred, tf.float32))
         summary_loss = tf.summary.scalar('loss', loss)
-        tf.summary.merge([prediction_image, label_image, summary_loss])
+        tf.summary.merge([prediction_image, label_image, input_image, summary_loss])
         if training:
-            params["learning_rate"] = params["learning_rate"] * .99
-            # tf.print(loss)
-            optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=0.95, beta2=0.999)
+            # params["learning_rate"] = params["learning_rate"] * .99
+            optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=B1, beta2=B2)
             train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
             spec = tf.estimator.EstimatorSpec(
                 mode=mode,
@@ -102,12 +106,17 @@ def estimator_function(features, labels, mode, params):
     return spec
 
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+
+
 params = {"learning_rate": learning_rate}
 # set up the configurations of the estimator
 config = tf.estimator.RunConfig(
     save_summary_steps=100,
     save_checkpoints_steps=100,
-    keep_checkpoint_max=1
+    keep_checkpoint_max=1,
+    session_config=config
 )
 # Inializate the estimator
 model = tf.estimator.Estimator(
@@ -120,7 +129,7 @@ print('Starting training')
 
 for epoch in range(epochs):
     print(epoch)
-    model.train(input_fn=lambda: train_inputs(batch, number_of_data))
+    model.train(input_fn=lambda: train_inputs(batch))
     print(model.evaluate(input_fn=lambda: eval_inputs(batch)))
 
 print('Trainned finished')

@@ -3,9 +3,8 @@ from tensorflow.nn import leaky_relu
 import tensorflow as tf
 
 
-def network(inputs, image_size, training=False):
+def network(inputs, training=False):
     # Input seatting
-    inputs = tf.reshape(inputs, (-1, image_size, image_size, image_size, 1))
 
     # ----------------------------------------------------------------------------------------------------------------------
 
