@@ -1,4 +1,3 @@
-import tqdm
 import tensorflow as tf
 from model import network
 from tfrecords import read_and_decode
@@ -23,8 +22,8 @@ test_tfrecord_path = disk+str(size)+'data/test_dataL.tfrecords'
 
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
-batch = 4
-epochs = 20500 #- ( 90 )
+batch = 8
+epochs = 21000 #- ( 90 )
 input_shape = (size, size, size, 1)
 learning_rate = 3e-4
 B1 = 0.9
@@ -33,7 +32,18 @@ B2 = 0.99
 
 def train_inputs(batch_size, num_shuffles=100):
     dataset = read_and_decode(train_tfrecord_path)
-    dataset = dataset.shuffle(num_shuffles).batch(batch_size)
+
+    # shuffle and repeat examples for better randomness and allow training beyond one epoch
+    dataset = dataset.apply(tf.contrib.data.shuffle_and_repeat(32 * batch_size))
+
+    # map the parse  function to each example individually in threads*2 parallel calls
+
+    # batch the examples
+    dataset = dataset.batch(batch_size=batch_size)
+
+    # prefetch batch
+
+    dataset = dataset.prefetch(buffer_size=batch_size)
     return dataset
 
 
@@ -77,7 +87,7 @@ def estimator_function(features, labels, mode, params):
         summary_loss = tf.summary.scalar('loss', loss)
         tf.summary.merge([prediction_image, label_image, input_image, summary_loss])
         if training:
-            # params["learning_rate"] = params["learning_rate"] * .99
+            params["learning_rate"] = params["learning_rate"] * .99
             optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=B1, beta2=B2)
             train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
             spec = tf.estimator.EstimatorSpec(
@@ -92,7 +102,7 @@ def estimator_function(features, labels, mode, params):
                 save_steps=1,
                 output_dir=eval_path,
                 summary_op=[tf.summary.scalar('loss', loss),
-                            tf.summary.image("Test prediction",
+                            tf.summary.image("Test_prediction",
                                              show_image(y_pred),
                                              max_outputs=8)]
             )
@@ -114,7 +124,7 @@ params = {"learning_rate": learning_rate}
 # set up the configurations of the estimator
 config = tf.estimator.RunConfig(
     save_summary_steps=100,
-    save_checkpoints_steps=100,
+    save_checkpoints_steps=1000,
     keep_checkpoint_max=1,
     session_config=config
 )
@@ -125,11 +135,22 @@ model = tf.estimator.Estimator(
     model_dir=main_path,
     config=config)
 
+tf.logging.info("Total steps = {}, num_epochs = {}, batch size = {}".format(epochs, epochs, batch))
+
+train_spec = tf.estimator.TrainSpec(input_fn=lambda: train_inputs(batch), max_steps=epochs)
+eval_spec = tf.estimator.EvalSpec(input_fn=lambda: eval_inputs(batch))
 print('Starting training')
+def estimator_training(args):
+    del args
+    tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
 
-for epoch in range(epochs):
-    print(epoch)
-    model.train(input_fn=lambda: train_inputs(batch))
-    print(model.evaluate(input_fn=lambda: eval_inputs(batch)))
+# for epoch in range(epochs):
+#     print(epoch)
+#     model.train(input_fn=lambda: train_inputs(batch))
+#     print(model.evaluate(input_fn=lambda: eval_inputs(batch)))
 
-print('Trainned finished')
+if __name__ == '__main__':
+    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.app.run(estimator_training)
+
+    print('Trainned finished')

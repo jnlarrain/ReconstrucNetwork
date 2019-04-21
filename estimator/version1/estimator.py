@@ -11,7 +11,7 @@ os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 main48 tiene 256 samples, batch 32
 '''
 
-version = 2
+version = 3
 size = 48
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
@@ -26,7 +26,7 @@ test_tfrecord_path = disk+str(size)+'data/test_dataL.tfrecords'
 batch = 4
 epochs = 20500 #- ( 90 )
 input_shape = (size, size, size, 1)
-learning_rate = 3e-5
+learning_rate = 3e-4
 B1 = 0.9
 B2 = 0.99
 
