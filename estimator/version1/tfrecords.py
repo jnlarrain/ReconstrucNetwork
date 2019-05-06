@@ -13,12 +13,11 @@ def _bytes_feature(value):
 
 
 def _float_16_to_int(value):
-    value = (((value - np.min(value)) / np.max(value)) * (2. ** 16))-1
-    return value.astype('uint16')
+    return ((value - np.min(value)) / np.max(value) * 2 ** 16).astype('uint16')
 
 
 def _int_to_float_16(value):
-    return (value-1) / 2 ** 16, tf.float16
+    return value / 2 ** 16, tf.float16
 
 
 def dataset_generator(features, labels):
@@ -55,11 +54,8 @@ def convert_tfrecords(images, labels, name):
 def read_and_decode(filename):
     def decode_data(coded_data, size):
         data = tf.decode_raw(coded_data, tf.uint16)
-        data = tf.cast(data, tf.float32)
-        data = tf.reshape(data, [size, ] * 3 + [1])
-        # data = tf.image.per_image_standardization(data)
-        data = data /(2**16 - 1)
-        return data
+        data = tf.cast(data, tf.float32)    # ------------------------------------------------------------------ FLOAT32
+        return tf.reshape(data, [size, ] * 3 + [1])
 
     def _parse_image_function(example_proto):
         # Parse the input tf.Example proto using the dictionary above.
@@ -91,7 +87,7 @@ if __name__ == '__main__':
     disk = 'E:'
     size = 48
 
-    from .load_data import Data
+    from load_data import Data
     number_of_data = 70  # 70400
     test_samples = 16
 
