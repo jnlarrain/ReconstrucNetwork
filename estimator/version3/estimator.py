@@ -99,15 +99,12 @@ def estimator_function(features, labels, mode, params):
         training = mode == tf.estimator.ModeKeys.TRAIN
         y_pred = network(features)
         # summary the training image
-        input_image = tf.summary.image("Input",
-                                       show_image(features),
-                                       max_outputs=8)
         summary_images = tf.summary.image("Summary",
                                        show_summary(y_pred, labels),
                                        max_outputs=8)
         loss = loss_funtion(tf.cast(labels, tf.float32), tf.cast(y_pred, tf.float32))
         summary_loss = tf.summary.scalar('loss', loss)
-        tf.summary.merge([input_image, summary_loss, summary_images])
+        tf.summary.merge([summary_loss, summary_images])
         if training:
             params["learning_rate"] = params["learning_rate"] * .99
             optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=B1, beta2=B2)
