@@ -10,15 +10,15 @@ os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 main48 tiene 256 samples, batch 32
 '''
 
-version = 53
+version = 2
 size = 48
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
 eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
 
 # tfrecords path
-train_tfrecord_path = disk+str(size)+'data/train_OneSphereAll.tfrecords'
-test_tfrecord_path = disk+str(size)+'data/test_OneSphereAll.tfrecords'
+train_tfrecord_path = disk+str(size)+'data/train_16384.tfrecords'
+test_tfrecord_path = disk+str(size)+'data/test_1024.tfrecords'
 
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
@@ -99,15 +99,12 @@ def estimator_function(features, labels, mode, params):
         training = mode == tf.estimator.ModeKeys.TRAIN
         y_pred = network(features)
         # summary the training image
-        input_image = tf.summary.image("Input",
-                                       show_image(features),
-                                       max_outputs=8)
         summary_images = tf.summary.image("Summary",
                                        show_summary(y_pred, labels),
                                        max_outputs=8)
         loss = loss_funtion(tf.cast(labels, tf.float32), tf.cast(y_pred, tf.float32))
         summary_loss = tf.summary.scalar('loss', loss)
-        tf.summary.merge([input_image, summary_loss, summary_images])
+        tf.summary.merge([summary_loss, summary_images])
         if training:
             params["learning_rate"] = params["learning_rate"] * .99
             optimizer = tf.train.AdamOptimizer(learning_rate=params["learning_rate"], beta1=B1, beta2=B2)
