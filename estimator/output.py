@@ -10,15 +10,14 @@ os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 main48 tiene 256 samples, batch 32
 '''
 
-version = 53
+version = 2
 size = 48
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
 eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
 
 # tfrecords path
-train_tfrecord_path = disk+str(size)+'data/train_OneSphereAll.tfrecords'
-test_tfrecord_path = disk+str(size)+'data/test_OneSphereAll2.tfrecords'
+test_tfrecord_path = disk+str(size)+'data/ruido.tfrecords'
 
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
@@ -79,7 +78,7 @@ def show_summary(images, labels):
 
 def eval_inputs(batch_size):
     dataset = read_and_decode(test_tfrecord_path)
-    dataset = dataset.shuffle(100).batch(batch_size)
+    dataset = dataset.batch(batch_size)
     return dataset
 
 
@@ -154,13 +153,17 @@ salida = model.predict(input_fn=lambda: eval_inputs(batch))
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 
 out = np.array(list(salida))
 out = out.reshape(out.shape[:-1])
 
-for img in out[0]:
-    plt.imshow(img, cmap='gray')
-    plt.show()
+path = "D:/ReconstrucNetwork/resultados"
+
+
+with open('ruido.txt', 'wb') as data:
+    data.write(pickle.dumps(out))
+
 
 
 

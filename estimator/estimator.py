@@ -10,7 +10,7 @@ os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 main48 tiene 256 samples, batch 32
 '''
 
-version = 2
+version = 4
 size = 48
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
