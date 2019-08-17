@@ -10,21 +10,21 @@ os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
 main48 tiene 256 samples, batch 32
 '''
 
-version = 4
-size = 48
+version = 1
+size = 128
 disk = 'D:/'
 main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
 eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
 
 # tfrecords path
-train_tfrecord_path = disk+str(size)+'data/train_16384.tfrecords'
-test_tfrecord_path = disk+str(size)+'data/test_1024.tfrecords'
+train_tfrecord_path = disk+str(size)+'data/'  # *.tfrecords'
+test_tfrecord_path = disk+str(size)+'data/'  # *.tfrecords'
 
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
-batch = 16
-epochs = 21000 #- ( 90 )
-input_shape = (size, size, size, 1)
+batch = 2
+epochs = 21000*8 #- ( 90 )
+input_shape = (size, size, 48, 1)
 learning_rate = 3e-5
 B1 = 0.9
 B2 = 0.99

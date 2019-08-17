@@ -138,16 +138,6 @@ class Estimator:
         model_dir=main_path)
 
     eval_spec = tf.estimator.EvalSpec(input_fn=lambda: eval_inputs(batch))
-    print('Starting training')
+    print('Starting training')d
 
     salida = model.predict(input_fn=lambda: eval_inputs(batch))
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    out = np.array(list(salida))
-    out = out.reshape(out.shape[:-1])
-
-    for img in out[0]:
-        plt.imshow(img, cmap='gray')
-        plt.show()

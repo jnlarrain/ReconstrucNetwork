@@ -59,7 +59,7 @@ threads = []
 for file in tqdm(range(N)):
     threads.append(Thread(target=training_data, args=(file,)))
     threads[-1].start()
-    if file % 100 == 0:
+    if file % 256 == 0:
         for worker in threads:
             worker.join()
         threads = []

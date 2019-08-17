@@ -22,46 +22,6 @@ with open(path + '/resultados.txt', 'rb') as data:
 with open(path + '/ruido.txt', 'rb') as data:
     ruido = pickle.load(data)
 
-# def read_and_decode(dataset):
-#     def decode_data(coded_data, size):
-#         data = tf.decode_raw(coded_data, tf.uint16)
-#         data = tf.cast(data, tf.float32)
-#         data = tf.reshape(data, [size, ] * 3 + [1])
-#         # data = tf.image.per_image_standardization(data)
-#         data = data / (2 ** 16 - 1)
-#         return data
-#
-#     def _parse_image_function(example_proto):
-#         # Parse the input tf.Example proto using the dictionary above.
-#         features = tf.parse_single_example(example_proto, image_feature_description)
-#         size = features['height']
-#         image_raw = features['image_raw']
-#         label_raw = features['label']
-#         image = decode_data(image_raw, size)
-#         label = decode_data(label_raw, size)
-#
-#         return label, image
-#
-#     image_feature_description = {
-#         'height': tf.FixedLenFeature([], tf.int64),
-#         'width': tf.FixedLenFeature([], tf.int64),
-#         'depth': tf.FixedLenFeature([], tf.int64),
-#         'label': tf.FixedLenFeature([], tf.string),
-#         'image_raw': tf.FixedLenFeature([], tf.string),
-#     }
-#
-#     parsed_dataset = dataset.map(_parse_image_function)
-#     return parsed_dataset
-#
-#
-# for i in out:
-#     print(i.shape)
-#
-# data = tf.data.TFRecordDataset(test_tfrecord_path)
-# dataset = read_and_decode(data)
-# for i in dataset.take(5):
-#     print(i)
-
 
 def read_and_decode(filename):
     def decode_data(coded_data, size):
