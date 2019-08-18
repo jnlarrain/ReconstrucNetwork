@@ -1,6 +1,5 @@
 import tensorflow as tf
-from model import network
-from tfrecords import read_and_decode
+from model import Network
 import os
 
 os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
@@ -13,38 +12,22 @@ config = tf.estimator.RunConfig(
     session_config=config
 )
 
+
 class Estimator:
-    def __init__(self, path, steps, batch, learning_rate, size, version, train=True):
-        self.train_path = path + '_train.tfrecords'
-        self.evaluation_path = path + '_test.tfrecords'
-        self.epochs = steps // batch
-        self.batch = batch
-        self.steps = steps
+    def __init__(self, learning_rate, size, version, train=True):
+        self.network = Network()
         self.size = size
         self.B1 = 0.9
         self.B2 = 0.99
         self.disk = 'D:/'
-        self.main_path = 'logs/mainOne' + str(size) + 'version' + str(version)
-        self.eval_path = 'logs/evaluationOne' + str(size) + 'version' + str(version)
+        self.main_path = 'logs/' + str(size) + 'version' + str(version)
+        self.eval_path = 'logs/' + str(size) + 'version' + str(version) + 'evaluation'
         self.train = train
         self.learning_rate = learning_rate
-
-    def train_inputs(self, batch_size, num_shuffles=100):
-        dataset = read_and_decode(self.train_path)
-
-        # shuffle and repeat examples for better randomness and allow training beyond one epoch
-        dataset = dataset.repeat(self.epochs)
-        dataset = dataset.shuffle(num_shuffles)
-
-        # map the parse  function to each example individually in threads*2 parallel calls
-
-        # batch the examples
-        dataset = dataset.batch(batch_size=batch_size)
-
-        # prefetch batch
-
-        dataset = dataset.prefetch(buffer_size=batch_size)
-        return dataset
+        self._estimator = tf.estimator.Estimator(model_fn=self.estimator_function,
+                                                 params={"learning_rate": learning_rate},
+                                                 model_dir=self.main_path,
+                                                 config=config)
 
     def show_image(self, preds):
         result = tf.concat([preds[:, self.size // 2, :, :, :],
@@ -73,11 +56,6 @@ class Estimator:
                             new_diff[:, :, :, :], scale], 2)
         return result
 
-    def eval_inputs(self, batch_size):
-        dataset = read_and_decode(self.evaluation_path)
-        dataset = dataset.shuffle(100).batch(batch_size)
-        return dataset
-
     def loss_funtion(self, labels, preds):
         # l1 = tf.losses.absolute_difference(labels, preds)
         l2 = tf.losses.mean_squared_error(labels, preds)
@@ -86,12 +64,12 @@ class Estimator:
     def estimator_function(self, features, labels, mode, params):
         global step
         if mode == tf.estimator.ModeKeys.PREDICT:
-            y_pred = network(features)
+            y_pred = self.network.main(features)
             spec = tf.estimator.EstimatorSpec(mode=mode, predictions=y_pred)
         # For training and testing
         else:
             training = mode == tf.estimator.ModeKeys.TRAIN
-            y_pred = network(features)
+            y_pred = self.network.main(features)
             # summary the training image
             summary_images = tf.summary.image("Summary",
                                               self.show_summary(y_pred, labels),
@@ -128,16 +106,10 @@ class Estimator:
                 )
         return spec
 
-   def training(self):
-
-    params = {"learning_rate": learning_rate}
-    # Inializate the estimator
-    model = tf.estimator.Estimator(
-        model_fn=estimator_function,
-        params=params,
-        model_dir=main_path)
-
-    eval_spec = tf.estimator.EvalSpec(input_fn=lambda: eval_inputs(batch))
-    print('Starting training')d
-
-    salida = model.predict(input_fn=lambda: eval_inputs(batch))
+    def entrenamiento(self, train_spec, eval_spec):
+        def estimator_training(args):
+            del args
+            tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
+        model = self._estimator
+        tf.logging.set_verbosity(tf.logging.INFO)
+        tf.app.run(estimator_training)
