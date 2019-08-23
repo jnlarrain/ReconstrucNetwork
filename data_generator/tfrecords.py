@@ -17,15 +17,6 @@ def _float_16_to_int(value):
     return value.astype('uint16')
 
 
-def _int_to_float_16(value):
-    return value / 2 ** 16, tf.float16
-
-
-def dataset_generator(features, labels):
-    inputs = tf.data.Dataset.from_tensor_slices((features, labels))
-    return inputs
-
-
 # images and labels array as input
 def convert_tfrecords(images, labels, name):
     num_examples = len(labels)
@@ -41,8 +32,10 @@ def convert_tfrecords(images, labels, name):
 
     writer = tf.python_io.TFRecordWriter(filename)
     for index in tqdm.tqdm(range(num_examples)):
-        image_raw = _float_16_to_int(images[index]).tostring()
-        label_raw = _float_16_to_int(labels[index]).tostring()
+        # image_raw = _float_16_to_int(images[index]).tostring()
+        # label_raw = _float_16_to_int(labels[index]).tostring()
+        image_raw = images[index].astype('float32').tostring()
+        label_raw = labels[index].astype('float32').tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
             'height': _int_feature(rows),
             'width': _int_feature(cols),
@@ -53,21 +46,23 @@ def convert_tfrecords(images, labels, name):
 
 
 def read_and_decode(filename):
-    def decode_data(coded_data, size):
+    def decode_data(coded_data, shape):
         data = tf.decode_raw(coded_data, tf.uint16)
         data = tf.cast(data, tf.float32)
-        data = tf.reshape(data, [size, ] * 3 + [1])
-        data = tf.image.per_image_standardization(data)
+        data = tf.reshape(data, shape + [1])
         return data
 
     def _parse_image_function(example_proto):
         # Parse the input tf.Example proto using the dictionary above.
         features = tf.parse_single_example(example_proto, image_feature_description)
-        size = features['height']
+        height = features['height']
+        width = features['width']
+        depth = features['depth']
+        shape = [height, width, depth]
         image_raw = features['image_raw']
         label_raw = features['label']
-        image = decode_data(image_raw, size)
-        label = decode_data(label_raw, size)
+        image = decode_data(image_raw, shape)
+        label = decode_data(label_raw, shape)
 
         return image, label
 
@@ -84,27 +79,3 @@ def read_and_decode(filename):
     parsed_dataset = dataset.map(_parse_image_function)
     return parsed_dataset
 
-
-if __name__ == '__main__':
-    tf.enable_eager_execution()
-    disk = 'E:'
-    size = 48
-
-    from .load_data import Data
-
-    number_of_data = 70  # 70400
-    test_samples = 16
-
-    data = Data(disk, size, number_of_data, test_samples)
-    data_dict = data.main()
-    train_labels = data_dict['train_input'][:16]
-    train_data = data_dict['train_label'][:16]
-    test_labels = data_dict['test_input'][:16]
-    test_data = data_dict['test_label'][:16]
-    convert_tfrecords(train_data, train_labels, str(size) + 'data/train_dataL')
-    convert_tfrecords(test_data, test_labels, str(size) + 'data/test_dataL')
-
-    # tfrecords path
-    # train_tfrecord_path = disk + str(size) + 'data/train_data.tfrecords'
-    # test_tfrecord_path = disk + str(size) + 'data/test_data.tfrecords'
-    # read_and_decode(test_tfrecord_path)

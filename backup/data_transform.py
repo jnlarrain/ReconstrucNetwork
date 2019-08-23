@@ -15,6 +15,7 @@ nombres = list(filter(lambda x: 'f' not in x, list(walk(str(FOV) + "data/data"))
 nombres2 = list(filter(lambda x: 'f' in x, list(walk(str(FOV) + "data/data"))[0][2]))
 nombres = [str(FOV) + "data/data/" + path for path in nombres]
 nombres2 = [str(FOV) + "data/data/" + path for path in nombres2]
+
 contador = 0
 for i in nombres:
     with open(i, 'r') as file:

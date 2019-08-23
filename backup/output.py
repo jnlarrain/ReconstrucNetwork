@@ -1,6 +1,5 @@
 import tensorflow as tf
-from model import network
-from tfrecords import read_and_decode
+from estimator.model import Network
 import os
 
 

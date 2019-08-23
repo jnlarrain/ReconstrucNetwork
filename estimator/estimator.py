@@ -1,27 +1,26 @@
 import tensorflow as tf
-from model import Network
+from .model import Network
 import os
-
-os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-config = tf.estimator.RunConfig(
-    save_summary_steps=100,
-    save_checkpoints_steps=500,
-    keep_checkpoint_max=1,
-    session_config=config
-)
 
 
 class Estimator:
-    def __init__(self, learning_rate, size, version, train=True):
+    def __init__(self, learning_rate, shape, version, train=True):
+        os.environ['TF_ENABLE_MIXED_PRECISION'] = '1'
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config = tf.estimator.RunConfig(
+            save_summary_steps=100,
+            save_checkpoints_steps=500,
+            keep_checkpoint_max=1,
+            session_config=config
+        )
         self.network = Network()
-        self.size = size
+        self.shape = shape
         self.B1 = 0.9
         self.B2 = 0.99
         self.disk = 'D:/'
-        self.main_path = 'logs/' + str(size) + 'version' + str(version)
-        self.eval_path = 'logs/' + str(size) + 'version' + str(version) + 'evaluation'
+        self.main_path = 'logs/' + str(shape) + 'version' + str(version)
+        self.eval_path = 'logs/' + str(shape) + 'version' + str(version) + 'evaluation'
         self.train = train
         self.learning_rate = learning_rate
         self._estimator = tf.estimator.Estimator(model_fn=self.estimator_function,
@@ -29,27 +28,23 @@ class Estimator:
                                                  model_dir=self.main_path,
                                                  config=config)
 
-    def show_image(self, preds):
-        result = tf.concat([preds[:, self.size // 2, :, :, :],
-                            preds[:, :, self.size // 2, :, :],
-                            preds[:, :, :, self.size // 2, :]], 1)
+    def show_image(self, image):
+        cut_1 = tf.image.resize_images(image[:, self.shape[0] // 2, :, :, :], self.shape[:2])
+        cut_2 = tf.image.resize_images(image[:, :, self.shape[1] // 2, :, :], self.shape[:2])
+        cut_3 = tf.image.resize_images(image[:, :, :, self.shape[2] // 2, :], self.shape[:2])
+        result = tf.concat([cut_1, cut_2, cut_3], 1)
         return result
 
     def show_summary(self, images, labels):
         diff = labels - images
-        new_images = tf.concat([images[:, self.size // 2, :, :, :],
-                                images[:, :, self.size // 2, :, :],
-                                images[:, :, :, self.size // 2, :]], 1)
-        new_diff = tf.concat([diff[:, self.size // 2, :, :, :],
-                              diff[:, :, self.size // 2, :, :],
-                              diff[:, :, :, self.size // 2, :]], 1)
-        new_labels = tf.concat([labels[:, self.size // 2, :, :, :],
-                                labels[:, :, self.size // 2, :, :],
-                                labels[:, :, :, self.size // 2, :]], 1)
+        new_images = self.show_image(images)
+        new_diff = self.show_image(diff)
+        new_labels = self.show_image(labels)
         maximum = tf.ones(tf.shape(new_labels)) * tf.reduce_max(diff)
         minimum = tf.ones(tf.shape(new_labels)) * tf.reduce_min(diff)
         zeros = tf.zeros(tf.shape(new_labels))
-        scale = tf.concat([maximum[:, :self.size, :2, :], zeros[:, :self.size, :2, :], minimum[:, :self.size, :2, :]],
+        scale = tf.concat([maximum[:, :self.shape[0], :2, :], zeros[:, :self.shape[0], :2, :],
+                           minimum[:, :self.shape[0], :2, :]],
                           1)
         result = tf.concat([new_labels[:, :, :, :],
                             new_images[:, :, :, :],
@@ -110,6 +105,7 @@ class Estimator:
         def estimator_training(args):
             del args
             tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
+
         model = self._estimator
         tf.logging.set_verbosity(tf.logging.INFO)
         tf.app.run(estimator_training)
