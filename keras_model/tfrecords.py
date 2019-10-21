@@ -1,7 +1,5 @@
 import tensorflow as tf
 import os
-import numpy as np
-import tqdm
 
 
 def _int_feature(value):
@@ -10,11 +8,6 @@ def _int_feature(value):
 
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-
-def _float_16_to_int(value):
-    value = (((value - np.min(value)) / np.max(value)) * (2. ** 16 - 1))
-    return value.astype('uint16')
 
 
 # images and labels array as input
@@ -31,9 +24,7 @@ def convert_tfrecords(images, labels, name):
     print('Writing', filename)
 
     writer = tf.python_io.TFRecordWriter(filename)
-    for index in tqdm.tqdm(range(num_examples)):
-        # image_raw = _float_16_to_int(images[index]).tostring()
-        # label_raw = _float_16_to_int(labels[index]).tostring()
+    for index in range(num_examples):
         image_raw = images[index].astype('float32').tostring()
         label_raw = labels[index].astype('float32').tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
@@ -47,9 +38,11 @@ def convert_tfrecords(images, labels, name):
 
 def read_and_decode(filename):
     def decode_data(coded_data, shape):
-        data = tf.decode_raw(coded_data, tf.uint16)
-        data = tf.cast(data, tf.float32)
+        data = tf.decode_raw(coded_data, tf.float32)
         data = tf.reshape(data, shape + [1])
+        # data = (data - tf.reduce_min(data)) / tf.reduce_max(data)
+        # data = tf.image.per_image_standardization(data)
+        # data = tf.cast(data, tf.float16)
         return data
 
     def _parse_image_function(example_proto):
@@ -78,4 +71,3 @@ def read_and_decode(filename):
 
     parsed_dataset = dataset.map(_parse_image_function)
     return parsed_dataset
-
