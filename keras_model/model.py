@@ -1,112 +1,16 @@
-from keras.layers import MaxPooling3D, Conv3D, Activation, Deconv3D, BatchNormalization, UpSampling3D
-from keras.layers import concatenate, LeakyReLU, Input
-import keras.backend as K
-from keras.legacy import interfaces
-from keras.optimizers import Optimizer
-from keras.models import Model
+from tensorflow.keras.layers import MaxPooling3D, Conv3D, Conv3DTranspose, BatchNormalization, UpSampling3D
+from tensorflow.keras.layers import concatenate, LeakyReLU, Input
+from optimizer import AdamAccumulate
+from tensorflow.keras import Model
 import tensorflow as tf
-
-
-class AdamAccumulate(Optimizer):
-
-    def __init__(self, lr=0.001, beta_1=0.9, beta_2=0.999,
-                 epsilon=None, decay=0., amsgrad=False, accum_iters=1, **kwargs):
-        if accum_iters < 1:
-            raise ValueError('accum_iters must be >= 1')
-        super(AdamAccumulate, self).__init__(**kwargs)
-        with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
-            self.lr = K.variable(lr, name='lr')
-            self.beta_1 = K.variable(beta_1, name='beta_1')
-            self.beta_2 = K.variable(beta_2, name='beta_2')
-            self.decay = K.variable(decay, name='decay')
-        if epsilon is None:
-            epsilon = K.epsilon()
-        self.epsilon = epsilon
-        self.initial_decay = decay
-        self.amsgrad = amsgrad
-        self.accum_iters = K.variable(accum_iters, K.dtype(self.iterations))
-        self.accum_iters_float = K.cast(self.accum_iters, K.floatx())
-
-    @interfaces.legacy_get_updates_support
-    def get_updates(self, loss, params):
-        grads = self.get_gradients(loss, params)
-        self.updates = [K.update_add(self.iterations, 1)]
-
-        lr = self.lr
-
-        completed_updates = K.cast(K.tf.floordiv(self.iterations, self.accum_iters), K.floatx())
-
-        if self.initial_decay > 0:
-            lr = lr * (1. / (1. + self.decay * completed_updates))
-
-        t = completed_updates + 1
-
-        lr_t = lr * (K.sqrt(1. - K.pow(self.beta_2, t)) / (1. - K.pow(self.beta_1, t)))
-
-        # self.iterations incremented after processing a batch
-        # batch:              1 2 3 4 5 6 7 8 9
-        # self.iterations:    0 1 2 3 4 5 6 7 8
-        # update_switch = 1:        x       x    (if accum_iters=4)
-        update_switch = K.equal((self.iterations + 1) % self.accum_iters, 0)
-        update_switch = K.cast(update_switch, K.floatx())
-
-        ms = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
-        vs = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
-        gs = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
-
-        if self.amsgrad:
-            vhats = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
-        else:
-            vhats = [K.zeros(1) for _ in params]
-
-        self.weights = [self.iterations] + ms + vs + vhats
-
-        for p, g, m, v, vhat, tg in zip(params, grads, ms, vs, vhats, gs):
-
-            sum_grad = tg + g
-            avg_grad = sum_grad / self.accum_iters_float
-
-            m_t = (self.beta_1 * m) + (1. - self.beta_1) * avg_grad
-            v_t = (self.beta_2 * v) + (1. - self.beta_2) * K.square(avg_grad)
-
-            if self.amsgrad:
-                vhat_t = K.maximum(vhat, v_t)
-                p_t = p - lr_t * m_t / (K.sqrt(vhat_t) + self.epsilon)
-                self.updates.append(K.update(vhat, (1 - update_switch) * vhat + update_switch * vhat_t))
-            else:
-                p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon)
-
-            self.updates.append(K.update(m, (1 - update_switch) * m + update_switch * m_t))
-            self.updates.append(K.update(v, (1 - update_switch) * v + update_switch * v_t))
-            self.updates.append(K.update(tg, (1 - update_switch) * sum_grad))
-            new_p = p_t
-
-            # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
-                new_p = p.constraint(new_p)
-
-            self.updates.append(K.update(p, (1 - update_switch) * p + update_switch * new_p))
-        return self.updates
-
-    def get_config(self):
-        config = {'lr': float(K.get_value(self.lr)),
-                  'beta_1': float(K.get_value(self.beta_1)),
-                  'beta_2': float(K.get_value(self.beta_2)),
-                  'decay': float(K.get_value(self.decay)),
-                  'epsilon': self.epsilon,
-                  'amsgrad': self.amsgrad}
-        base_config = super(AdamAccumulate, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
 
 
 class Network:
     def __init__(self, shape):
         _input = Input(shape)
         self.model = Model(inputs=_input, outputs=self.main(_input))
-        opt = AdamAccumulate(lr=0.001, decay=1e-5, accum_iters=16)
-        self.model.compile(loss='mse',  # Loss function
-                      optimizer=opt)  # Accuracy matrix
+        # opt = AdamAccumulate(lr=0.001, decay=1e-5, accum_iters=16)
+        self.model.compile(loss='mse', optimizer='Adam')  # Accuracy matrix
 
     def main(self, inputs):
         # Layer 1
@@ -185,7 +89,7 @@ class Network:
         # Layer 6
         with tf.name_scope('layer12'):
             l6a = UpSampling3D(size=(2, 2, 2))(l5i)
-            l6b = Deconv3D(128, kernel_size=(2, 2, 2), padding='same')(l6a)
+            l6b = Conv3DTranspose(128, kernel_size=(2, 2, 2), padding='same')(l6a)
             l6c = concatenate([l4h, l6b], axis=4)
             l6d = Conv3D(128, kernel_size=(3, 3, 3), padding='same')(l6c)
             l6e = BatchNormalization()(l6d)
@@ -201,7 +105,7 @@ class Network:
         # Layer 7
         with tf.name_scope('layer14'):
             l7a = UpSampling3D(size=(2, 2, 2))(l6k)
-            l7b = Deconv3D(64, kernel_size=(2, 2, 2), padding='same')(l7a)
+            l7b = Conv3DTranspose(64, kernel_size=(2, 2, 2), padding='same')(l7a)
             l7c = concatenate([l3h, l7b], axis=4)
             l7d = Conv3D(64, kernel_size=(3, 3, 3), padding='same')(l7c)
             l7e = BatchNormalization()(l7d)
@@ -217,7 +121,7 @@ class Network:
         # Layer 8
         with tf.name_scope('layer16'):
             l8a = UpSampling3D(size=(2, 2, 2))(l7k)
-            l8b = Deconv3D(32, kernel_size=(2, 2, 2), padding='same')(l8a)
+            l8b = Conv3DTranspose(32, kernel_size=(2, 2, 2), padding='same')(l8a)
             l8c = concatenate([l2h, l8b], axis=4)
             l8d = Conv3D(32, kernel_size=(3, 3, 3), padding='same')(l8c)
             l8e = BatchNormalization()(l8d)
@@ -233,7 +137,7 @@ class Network:
         # Layer 9
         with tf.name_scope('layer18'):
             l9a = UpSampling3D(size=(2, 2, 2))(l8k)
-            l9b = Deconv3D(16, kernel_size=(2, 2, 2), padding='same')(l9a)
+            l9b = Conv3DTranspose(16, kernel_size=(2, 2, 2), padding='same')(l9a)
             l9c = concatenate([l1f, l9b], axis=4)
             l9d = Conv3D(16, kernel_size=(3, 3, 3), padding='same')(l9c)
             l9e = BatchNormalization()(l9d)
@@ -245,15 +149,36 @@ class Network:
         output = Conv3D(1, (1, 1, 1), padding='same')(l9i)
         return output
 
+    def loss_funtion(self, labels, preds):
+        l2 = tf.losses.mean_squared_error(labels, preds)
+        return l2
+
+    def train(self, data):
+        for x, y in data:
+            with tf.GradientTape() as tape:
+                prediction = self.model(x)
+                loss = self.loss_funtion(prediction, y)
+            # Simultaneously optimize trunk and head1 weights.
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            self.opt.apply_gradients(zip(gradients, self.model.trainable_variables))
+    #
+
 if __name__ == "__main__":
     import os
     version = 3
-
     size = 96
     disk = 'F:/'
+    batch = 8
+    epochs = 2 ** 12
+    input_shape = (size, size, size, 1)
+    learning_rate = 3e-5
+    B1 = 0.9
+    B2 = 0.99
+
+    a = Network(input_shape)
+
 
     path = disk + str(size) + 'data/'
-
     train_path = list(os.walk(path + 'train/'))[0][-1]
     test_path = list(os.walk(path + 'test/'))[0][-1]
 
@@ -261,12 +186,8 @@ if __name__ == "__main__":
     test_path = [path + 'test/' + x for x in test_path]
 
     # set the path's were you want to storage the data(tensorboard and checkpoints)
-    batch = 8
-    epochs = 2 ** 12
-    input_shape = (size, size, size, 1)
-    learning_rate = 3e-5
-    B1 = 0.9
-    B2 = 0.99
+
+
 
     def train_inputs(batch_size, num_shuffles=100):
         dataset = read_and_decode(train_path)
@@ -319,5 +240,6 @@ if __name__ == "__main__":
         parsed_dataset = dataset.map(_parse_image_function)
         return parsed_dataset
 
-    a = Network(input_shape)
+
+    exit()
     a.model.fit(train_inputs(4), epochs=epochs)
