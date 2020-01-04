@@ -1,2 +1,6 @@
 # ReconstrucNetwork
-Proyect with Cristian Tejos
+Proyect with Cristian Tejos and Hans Lobel
+
+Reconstruct MRI images with Tensorflow
+
+
