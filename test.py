@@ -7,7 +7,7 @@ import numpy as np
 import scipy.io
 
 
-version = 2
+version = 6
 size = 96
 disk = 'F:/'
 

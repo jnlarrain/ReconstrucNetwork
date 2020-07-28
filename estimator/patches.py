@@ -1,0 +1,86 @@
+import tensorflow as tf
+
+
+def get_patches(images, size, veces=8):
+    # funcion para generar los patches de las imagenes
+
+    tamano_interno = size[0]//veces
+    innner = []
+    for element in range(veces):
+        inner.append()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

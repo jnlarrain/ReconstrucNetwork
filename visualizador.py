@@ -13,15 +13,15 @@ def cuatro_cortes(volumen):
 
     ax1.imshow(volumen[len(volumen) // 2, :, :], cmap='gray')
     ax1.set_title('corte 1')
-    col1 = fig.colorbar(ax1.contourf(volumen[len(volumen) // 2, :, :], 10, cmap='gray'), ax=ax1)
+    col1 = fig.colorbar(ax1.contourf(volumen[len(volumen) // 2, :, :], 255, cmap='gray'), ax=ax1)
 
     ax2.imshow(volumen[:, :, len(volumen) // 2], cmap='gray')
     ax2.set_title('corte 2')
-    col2 = fig.colorbar(ax2.contourf(volumen[:, :, len(volumen) // 2], 10, cmap='gray'), ax=ax2)
+    col2 = fig.colorbar(ax2.contourf(volumen[:, :, len(volumen) // 2], 255, cmap='gray'), ax=ax2)
 
     ax3.imshow(volumen[:, len(volumen) // 2, :], cmap='gray')
     ax3.set_title('corte 3')
-    col3 = fig.colorbar(ax3.contourf(volumen[:, len(volumen)//2, :], 10, cmap='gray'), ax=ax3)
+    col3 = fig.colorbar(ax3.contourf(volumen[:, len(volumen)//2, :], 255, cmap='gray'), ax=ax3)
 
     axcolor = 'lightgoldenrodyellow'
     axkp = plt.axes([0.15, 0.2, 0.20, 0.03], facecolor=axcolor)
@@ -44,7 +44,7 @@ def cuatro_cortes(volumen):
         new_volmen[new_volmen > humbral_s.val] = 0
 
         # ax1.imshow(new_volmen[int(pos_1.val), :, :], cmap='gray')
-        ax1.contourf(new_volmen[int(pos_1.val), :, :], 10, cmap='gray')
+        ax1.contourf(new_volmen[int(pos_1.val), :, :], 255, cmap='gray')
         min1 = np.min(new_volmen[int(pos_1.val), :, :])
         max1 = np.max(new_volmen[int(pos_1.val), :, :])
         col1.set_clim(vmin=min1, vmax=max1)
@@ -52,7 +52,7 @@ def cuatro_cortes(volumen):
         col1.draw_all()
 
         # ax2.imshow(new_volmen[:, :, int(pos_2.val)], cmap='gray')
-        ax2.contourf(new_volmen[:, :, int(pos_2.val)], 10, cmap='gray')
+        ax2.contourf(new_volmen[:, :, int(pos_2.val)], 255, cmap='gray')
         min2 = np.min(new_volmen[:, :, int(pos_2.val)])
         max2 = np.max(new_volmen[:, :, int(pos_2.val)])
         col2.set_clim(vmin=min2, vmax=max2)
@@ -60,7 +60,7 @@ def cuatro_cortes(volumen):
         col2.draw_all()
 
         # ax3.imshow(new_volmen[:, int(pos_3.val), :], cmap='gray')
-        ax3.contourf(new_volmen[:, int(pos_3.val), :], 10, cmap='gray')
+        ax3.contourf(new_volmen[:, int(pos_3.val), :], 255, cmap='gray')
         min3 = np.min(new_volmen[:, int(pos_3.val), :])
         max3 = np.max(new_volmen[:, int(pos_3.val), :])
         col3.set_clim(vmin=min3, vmax=max3)
