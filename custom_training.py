@@ -1,8 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from data_generator.tfrecords import read_and_decode
-from estimator.model import Network
-from estimator.imagenes import Image_shower
+from backup.estimator.model import Network
+from backup.estimator.imagenes import Image_shower
 import os
 
 

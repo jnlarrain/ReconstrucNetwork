@@ -1,7 +1,7 @@
 import tensorflow as tf
-from estimator.estimator import Estimator
+from backup.estimator import Estimator
 from data_generator.tfrecords import read_and_decode
-from visualizador import cuatro_cortes
+from utilidades.visualizador import cuatro_cortes
 import os
 import numpy as np
 import scipy.io

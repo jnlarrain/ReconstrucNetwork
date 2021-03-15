@@ -1,7 +1,6 @@
-import tensorflow as tf
 from data_generator.tfrecords import read_and_decode
 import os
-from visualizador import cuatro_cortes
+from utilidades.visualizador import cuatro_cortes
 
 size = 48
 disk = 'F:/'

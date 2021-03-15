@@ -1,5 +1,4 @@
 import tensorflow as tf
-from estimator.model import Network
 import os
 
 
@@ -150,7 +149,6 @@ print('Starting training')
 
 salida = model.predict(input_fn=lambda: eval_inputs(batch))
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 

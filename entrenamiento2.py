@@ -1,6 +1,6 @@
 import tensorflow as tf
 from data_generator.tfrecords import read_and_decode
-from estimator.estimator4 import Estimator
+from backup.estimator import Estimator
 import os
 
 os.environ['TF_ENABLE_AUTO_MIXED_PRECISION'] = '1'
