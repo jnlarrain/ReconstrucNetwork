@@ -17,6 +17,3 @@ def dipole_kernel(N, spatial_res):
 
     return kernel
 
-
-if __name__=='__main__':
-    print(dipole_kernel([50, 50, 50], ))

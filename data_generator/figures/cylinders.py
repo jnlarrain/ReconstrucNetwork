@@ -18,7 +18,8 @@ def sph2cart(azimuth, elevation, r):
     return x, y, z
 
 
-def cylinder(FOV, N, p1, p2, radius, xin, xout):
+def cylinder(k, N, p1, p2, radius, xin, xout):
+    k2, kx, ky, kz = k
     safe_number = 1e-16
     dp = p2 - p1
     alpha, theta, na = cart2sph(dp[0], dp[1], dp[2])
@@ -31,32 +32,6 @@ def cylinder(FOV, N, p1, p2, radius, xin, xout):
     yu = yu / (np.linalg.norm(yu)+safe_number)
     xu = np.array([-zu[0] * zu[2], -zu[1] * zu[2], zu[1] * zu[1] + zu[0] * zu[0]], dtype='float32')
     xu = xu / (np.linalg.norm(xu)+safe_number)
-
-    kx = np.array(list(range(0, N[0])), dtype='float32')
-    ky = np.array(list(range(0, N[1])), dtype='float32')
-    kz = np.array(list(range(0, N[2])), dtype='float32')
-
-    kx = kx - N[0] / 2
-    ky = ky - N[1] / 2
-    kz = kz - N[2] / 2
-
-    delta_kx = FOV[0] / N[0]
-    delta_ky = FOV[1] / N[1]
-    delta_kz = FOV[2] / N[2]
-
-    kx = kx * delta_kx - p1[0]
-    ky = ky * delta_ky - p1[1]
-    kz = kz * delta_kz - p1[2]
-
-    kx = np.reshape(kx, [len(kx), 1, 1])
-    ky = np.reshape(ky, [1, len(ky), 1])
-    kz = np.reshape(kz, [1, 1, len(kz)])
-
-    kx = np.tile(kx, [1, N[1], N[2]])
-    ky = np.tile(ky, [N[0], 1, N[2]])
-    kz = np.tile(kz, [N[0], N[1], 1])
-
-    k2 = kx ** 2 + ky ** 2 + kz ** 2
 
     chi = np.zeros(N)
 
@@ -77,6 +52,7 @@ def cylinder(FOV, N, p1, p2, radius, xin, xout):
 
     Bnuc = Bmac*Bnuc
     return chi, Bnuc
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
