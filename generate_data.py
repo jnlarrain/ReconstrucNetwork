@@ -1,9 +1,14 @@
 """
 Archivo para ala generacion de datos sinteticos QSM
+
+Se le puede o no agregar ruido a las imagenes, el ruido puede ser complejo, normal o uniforme. Tambien se le puede
+agregar focos de campo fuera del campo de vision de la imagen, y cambiar el comportamineto de la interfacez.
+
+El algoritmo utiliza la formula teorica y no la convolucion del dipolo
 """
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+import argparse
 from tqdm import tqdm
 from random import randint, choice
 import numpy as np
@@ -51,62 +56,9 @@ c_range = 8 # rango en que los radios de los cilindros son mas pequeños
 N1 = 1  # numero de datos de entrenamiento
 N2 = 1     # numero de datos de evaluacion
 
-def randoms(_fov, r=None, center=None, chi=None, _choice=False, _cylinder=False):
-    """
-    Funcion para generar k space
-    Parameters
-    ----------
-    _fov
-    r
-    center
-    chi float
-        valor de la susceptibilidad
-    _choice bool
-        flag para indicar que el rango de centros ya fue seleccionado por lo que solo se debe tomar uno al azar.
-    _cylinder
-
-    Returns
-    -------
-
-    """
-    suscep = np.random.normal(0, chi) * 1e-6 * np.random.choice([-1, 1])
-    radio = randint(*r)
-    if _cylinder:
-        p1 = np.array([randint(*range_center), randint(*range_center), randint(*range_center)], dtype='float32')
-        p2 = np.array([randint(*range_center), randint(*range_center), randint(*range_center)], dtype='float32')
-        k = (*calculate_k(FOV, FOV, points=p1),)
-        return k, radio, suscep, p1, p2
-    if _choice:
-        centers = [choice(center), choice(center), choice(center)]
-    else:
-        centers = [randint(*center), randint(*center), randint(*center)]
-
-    k = (*calculate_k(_fov, _fov, center=centers),)
-    return k, radio, suscep
 
 
-def out_spheres(number):
-    """
 
-    Parameters
-    ----------
-    number
-
-    Returns
-    -------
-
-    """
-    # campo inicial
-    background = np.zeros(FOV)
-    # rango posible para los centros
-    posible_range = [x for x in range(FOV2[0]) if x < size // 8 or x > int(size * 14 / 8)]
-    for _ in range(number):
-        k, radio, suscep = randoms(FOV2, [1, size // 16 - 1], posible_range, 10, True)
-        susceptibilidad, campo, _ = sphere(k, radio, suscep, 0)
-        # susceptibilidad /= 1e-6
-        cnt = FOV[0]
-        background += susceptibilidad[cnt // 2:cnt // 2 + cnt, cnt // 2:cnt // 2 + cnt, cnt // 2:cnt // 2 + cnt]
-    return background
 
 
 def new_image(N_archivo, range_radio, range_center):

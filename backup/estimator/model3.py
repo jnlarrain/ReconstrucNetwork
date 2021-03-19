@@ -1,5 +1,5 @@
-from keras.layers import MaxPooling3D, Conv3D, Conv3DTranspose, BatchNormalization, UpSampling3D, Dropout
-from keras.layers import concatenate, LeakyReLU
+from keras_model.layers import MaxPooling3D, Conv3D, Conv3DTranspose, BatchNormalization, UpSampling3D, Dropout
+from keras_model.layers import concatenate, LeakyReLU
 import tensorflow as tf
 
 tamano = 8

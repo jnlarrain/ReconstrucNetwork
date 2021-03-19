@@ -1,5 +1,5 @@
-from keras.layers import MaxPooling3D, Conv3D, Activation, Deconv3D, UpSampling3D
-from keras.layers import concatenate
+from keras_model.layers import MaxPooling3D, Conv3D, Activation, Deconv3D, UpSampling3D
+from keras_model.layers import concatenate
 import tensorflow as tf
 
 """

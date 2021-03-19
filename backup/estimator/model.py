@@ -1,6 +1,6 @@
-from keras.layers import MaxPooling3D, Conv3D, Activation, Conv3DTranspose, BatchNormalization, UpSampling3D
-from keras.layers import concatenate, LeakyReLU
-import keras.backend as K
+from keras_model.layers import MaxPooling3D, Conv3D, Activation, Conv3DTranspose, BatchNormalization, UpSampling3D
+from keras_model.layers import concatenate, LeakyReLU
+import keras_model.backend as K
 import tensorflow as tf
 
 """
