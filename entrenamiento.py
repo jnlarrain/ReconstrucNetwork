@@ -1,5 +1,5 @@
 import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -17,23 +17,32 @@ tf.config.optimizer.set_jit(True)
 
 tf.random.set_seed(1024)
 
-version = 1
+
+tipo = 'data'
+version = 'back_noise_3_ajuste' # version 3 entrenamiento largo
 size = 96
 
 # path = disk + str(size) + 'data_background/'
-path = 'F:/' + str(size) + 'data/'
-train_path = list(os.walk(path + 'train/'))[0][-1]
-test_path = list(os.walk(path + 'test/'))[0][-1]
+path = 'D:/' + str(size) + '{}/'.format(tipo)
+train_path = os.listdir(path + 'train/')
+test_path = os.listdir(path + 'test/')
 
 train_path = [path + 'train/' + x for x in train_path if '.tf' in x]
 test_path = [path + 'test/' + x for x in test_path if '.tf' in x]
+
+# train_path = [train_path[:1]]
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
 batch = 4
 epochs = 2 ** 18
 num_shuffles = 10
 input_shape = (size, size, size, 1)
-learning_rate = 3e-4 #1.2e-4
+learning_rate = 1.5e-4
+'''
+1.2e-5 entrenamiento normal
+todos entrenados conn new model bersion 1
+
+'''
 
 
 def train_inputs():
@@ -42,6 +51,7 @@ def train_inputs():
     # shuffle and repeat examples for better randomness and allow training beyond one epoch
     dataset = dataset.repeat(epochs // batch)
     dataset = dataset.shuffle(num_shuffles)
+    dataset = dataset.map(lambda x, y: (x*50, y*50), num_parallel_calls=24)
 
     # batch the examples
     dataset = dataset.batch(batch_size=batch)
@@ -53,6 +63,7 @@ def train_inputs():
 
 def eval_inputs():
     dataset = read_and_decode(test_path)
+    dataset = dataset.map(lambda x, y: (x*50, y*50), num_parallel_calls=24)
     dataset = dataset.batch(1)
     return dataset
 

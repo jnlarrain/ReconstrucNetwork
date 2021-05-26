@@ -33,11 +33,10 @@ class PerceptualLoss:
         self.m3 = MaxPooling2D((2, 2), strides=(2, 2))
 
     def loss(self, labels, preds):
-        lp = self.calculate(preds)
-        ll = self.calculate(labels)
+        lp = self.calculate(self.norm_image(preds))
+        ll = self.calculate(self.norm_image(labels))
         loss = tf.reduce_sum(tf.pow(lp-ll, 2))
-        #+ tf.reduce_sum(tf.pow(lp[1]-ll[1], 2)) + tf.reduce_sum(tf.pow(lp[2]-ll[2], 2))
-        tf.summary.image('Train', self.images.show_summary(preds, labels), max_outputs=8)
+        # tf.summary.image('Train', self.images.show_summary(preds, labels), max_outputs=8)
         return loss + self.loss_function(labels, preds) + self.regulator(preds, 2e-5)
 
     def calculate(self, item):

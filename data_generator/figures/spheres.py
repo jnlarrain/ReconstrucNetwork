@@ -2,6 +2,7 @@ import numpy as np
 from random import randint
 from time import  time
 
+
 def sphere(FOV, N, center, radius, xin, xout):
     '''
     

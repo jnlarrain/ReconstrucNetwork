@@ -24,12 +24,26 @@ class Estimator:
         self.count = 0
         self.grads = 0
 
-    @staticmethod
-    def loss_function(labels, preds):
+    def loss_function(self, labels, preds):
         l2 = tf.subtract(labels, preds)
         l2 = tf.square(l2)
         l2 = tf.reduce_sum(l2)
-        return l2
+
+        l1 = tf.abs(tf.subtract(labels, preds))
+
+        return l1 + l2 +self.regulator(preds)
+
+    @staticmethod
+    def regulator(volumen, alpha=1e-7):
+        pixel_dif1 = volumen[:, 1:, :, :, :] - volumen[:, :-1, :, :, :]
+        pixel_dif2 = volumen[:, :, 1:, :, :] - volumen[:, :, :-1, :, :]
+        pixel_dif3 = volumen[:, :, :, 1:, :] - volumen[:, :, :, :-1, :]
+        total_var = tf.reduce_sum(
+            tf.reduce_sum(tf.abs(pixel_dif1)) +
+            tf.reduce_sum(tf.abs(pixel_dif2)) +
+            tf.reduce_sum(tf.abs(pixel_dif3))
+        )
+        return total_var * alpha
 
     # @staticmethod
     #     # def loss_function_regulator(labels, preds, alpha=1e-7):

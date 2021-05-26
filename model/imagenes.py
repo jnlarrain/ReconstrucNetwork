@@ -45,6 +45,7 @@ class ImageShower:
                 fig.canvas.draw()
                 data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 img_arr = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                plt.close(fig)
                 return img_arr
 
         [image_numpy] = tf.py_function(_plot_buffer, [image, ], [tf.float32])

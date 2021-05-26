@@ -2,15 +2,32 @@ import tensorflow as tf
 
 
 class PerceptualLoss:
-    def __init__(self, model='model/loss_model/'):
-        self.model = tf.saved_model.load(model)
-        self.model.trainable = False
+    # def __init__(self, model='model/loss_model/'):
+    #     self.model = tf.saved_model.load(model)
+    #     self.model.trainable = False
+
+    @staticmethod
+    def norm_image(labels, preds):
+        minimo = tf.reduce_min(labels)
+        _labels = labels - minimo
+        _preds = preds - minimo
+        maximo = tf.reduce_max(_labels)
+        _labels = _labels/maximo
+        _preds = _preds/maximo
+        return _labels, _preds
 
     @tf.function
     def loss(self, labels, preds):
+        # labels, preds = self.norm_image(labels, preds)
         # [loss] = tf.py_function(self.perceptual, [self, labels, preds], [tf.float32])
-        loss = self.perceptual(labels, preds)
-        return loss + self.loss_function(labels, preds) + self.regulator(preds, 2e-5)
+        loss = self.l2(labels, preds) #+ self.l1(labels, preds)/100  # + self.regulator(preds, 2e-7)
+        # loss += self.perceptual(labels, preds)
+        return loss
+
+    @staticmethod
+    @tf.function
+    def l1(labels, preds):
+        return tf.reduce_sum(tf.abs(labels-preds)) / tf.cast(tf.size(preds), tf.float32)
 
     @tf.function
     def perceptual(self, labels, preds):
@@ -30,11 +47,12 @@ class PerceptualLoss:
 
     @staticmethod
     @tf.function
-    def loss_function(labels, preds):
+    def l2(labels, preds):
         l2 = tf.subtract(labels, preds)
         l2 = tf.square(l2)
+        # l2 = tf.sqrt(l2)
         l2 = tf.reduce_sum(l2)
-        return l2/tf.cast(tf.size(labels), tf.float32)
+        return l2 / tf.cast(tf.size(preds), tf.float32)
 
     @staticmethod
     @tf.function

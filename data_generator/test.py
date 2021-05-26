@@ -6,6 +6,7 @@ import os
 import numpy as np
 import scipy.io
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 version = 6
 size = 96
@@ -27,6 +28,7 @@ learning_rate = 3e-5
 B1 = 0.9
 B2 = 0.99
 
+
 def eval_inputs(batch_size):
     dataset = read_and_decode(test_path)
     dataset = dataset.batch(batch_size)
@@ -38,14 +40,12 @@ def numpy_inputs(numpy_array, salida):
     dataset = dataset.batch(1)
     return dataset
 
+
 estimator = Estimator(learning_rate, input_shape, version, True)
 eval_spec = tf.estimator.EvalSpec(input_fn=lambda: eval_inputs(batch))
 print('Starting test')
 
-
 salida = estimator._estimator.predict(input_fn=lambda: eval_inputs(batch))
-
-
 
 out = np.array(list(salida))
 out = out.reshape(out.shape[:-1])

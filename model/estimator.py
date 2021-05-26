@@ -20,6 +20,8 @@ class Estimator:
         self.images = ImageShower(shape)
         self.loss_model = None
 
+
+
     def estimator_function(self, features, labels, mode):
         y_pred = self.network.main(features)
         if mode == tf.estimator.ModeKeys.PREDICT:
@@ -32,8 +34,7 @@ class Estimator:
             with tf.device('cpu:0'):
                 sum_loss = tf.compat.v1.summary.scalar('loss', loss)
                 sum_img = tf.compat.v1.summary.image("Training", self.images.show_summary(y_pred, labels), max_outputs=8)
-                sum_input = tf.compat.v1.summary.image("Entrance", self.images.show_image_cuts(features), max_outputs=8)
-            tf.compat.v1.summary.merge([sum_input, sum_img, sum_loss])
+            tf.compat.v1.summary.merge([sum_img, sum_loss])
             if training:
                 train_op = self.optimizer.minimize(loss, tf.compat.v1.train.get_global_step(),
                                                    colocate_gradients_with_ops=True)

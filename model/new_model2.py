@@ -13,17 +13,16 @@ def multy_layer(inputs, number_filter):
 
 
 def multy_layer_2(inputs, number_filter):
-    layer_a = Conv3D(number_filter, kernel_size=(3, 3, 3), padding='same', strides=2)(inputs)
-    layer_a = LeakyReLU()(layer_a)
-    layer_a = Conv3D(number_filter // 2, kernel_size=(1, 1, 1), padding='same')(layer_a)
-    layer_a = LeakyReLU()(layer_a)
     layer_b = Conv3D(number_filter // 2, kernel_size=(3, 3, 3), dilation_rate=2, padding='same')(inputs)
-    layer_b = LeakyReLU()(layer_b)
-    layer_b = Conv3D(number_filter // 2, kernel_size=(3, 3, 3), strides=2, padding='same')(layer_b)
     layer_b = LeakyReLU()(layer_b)
     layer_b = Conv3D(number_filter // 2, kernel_size=(1, 1, 1), padding='same')(layer_b)
     layer_b = LeakyReLU()(layer_b)
-    return BatchNormalization()(tf.concat([layer_a, layer_b], -1))
+    layer_b = BatchNormalization()(layer_b)
+    layer_a = Conv3D(number_filter, kernel_size=(3, 3, 3), padding='same', strides=2)(tf.concat([inputs, layer_b], -1))
+    layer_a = LeakyReLU()(layer_a)
+    layer_a = Conv3D(number_filter // 2, kernel_size=(1, 1, 1), padding='same')(layer_a)
+    layer_a = LeakyReLU()(layer_a)
+    return BatchNormalization()(layer_a)
 
 
 def layer_last(inputs, number_filter):
