@@ -1,33 +1,9 @@
 import os
-import ants
-import numpy as np
 from tqdm import tqdm
-
-
-def central_crop(image, size):
-    def delta(size1, size2):
-        diff = np.abs(size1 - size2)
-        _delta = diff // 2
-        return _delta
-
-    image = np.squeeze(image)
-    shape = image.shape
-    print(shape)
-    dx = delta(shape[0], size[0])
-    dy = delta(shape[1], size[1])
-    dz = delta(shape[2], size[2])
-    image = image[dx:size[0] + dx, dy:size[1] + dy, dz:size[2] + dz]
-    image = np.expand_dims(image, [0, -1])
-    return image
-
-
-def open_nii_gz(path):
-    data = ants.image_read(path)
-    data = ants.reorient_image2(data, 'RAI')
-    return np.expand_dims(data.numpy().astype('float32'), [0, -1]), data
+from testing_tools import *
 
 output_path = 'D:\\files\\ReconstrucNetwork\\outputs\\SNR'
-input_path = 'D:\\files\\ReconstrucNetwork\\SNR1\\Sim1Snr1'
+input_path = '/SNR1/Sim1Snr1'
 image_pha, _ = open_nii_gz(os.path.join(input_path, 'Frequency.nii.gz'))
 image_mag, _ = open_nii_gz(os.path.join(input_path, 'MaskBrainExtracted.nii.gz'))
 ground, _ = open_nii_gz(os.path.join(input_path, 'GT', 'Chi.nii.gz'))

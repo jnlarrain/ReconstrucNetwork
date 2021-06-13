@@ -6,7 +6,12 @@ physical_devices = tf.config.list_physical_devices('GPU')
 for gpu in physical_devices:
     tf.config.experimental.set_memory_growth(gpu, True)
 from data_generator.tfrecords.tfrecords import read_and_decode
+from data_generator.dipole import dipole_kernel
 from model.estimator import Estimator
+import numpy as np
+import mlflow
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
+tf.random.set_seed(1024)
 tf.config.optimizer.set_jit(True)
 
 # from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -14,14 +19,11 @@ tf.config.optimizer.set_jit(True)
 # mixed_precision.set_policy(policy)
 # os.environ['TF_ENABLE_AUTO_MIXED_PRECISION'] = '1'
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-tf.random.set_seed(1024)
-
-
-tipo = 'data'
-version = 'back_noise_3_ajuste' # version 3 entrenamiento largo
-size = 96
-
+mlflow.tensorflow.autolog()
+tipo = 'data_back'
+version = 'back_48'# version 3 entrenamiento largo
+size = 48
+dipole = np.expand_dims(dipole_kernel([size, ]*3, [9e-6, ]*3), -1)
 # path = disk + str(size) + 'data_background/'
 path = 'D:/' + str(size) + '{}/'.format(tipo)
 train_path = os.listdir(path + 'train/')
@@ -33,14 +35,14 @@ test_path = [path + 'test/' + x for x in test_path if '.tf' in x]
 # train_path = [train_path[:1]]
 
 # set the path's were you want to storage the data(tensorboard and checkpoints)
-batch = 4
+batch = 32
 epochs = 2 ** 18
 num_shuffles = 10
 input_shape = (size, size, size, 1)
-learning_rate = 1.5e-4
+learning_rate = 3e-4
 '''
 1.2e-5 entrenamiento normal
-todos entrenados conn new model bersion 1
+todos entrenados conn new model version 1
 
 '''
 
@@ -51,7 +53,7 @@ def train_inputs():
     # shuffle and repeat examples for better randomness and allow training beyond one epoch
     dataset = dataset.repeat(epochs // batch)
     dataset = dataset.shuffle(num_shuffles)
-    dataset = dataset.map(lambda x, y: (x*50, y*50), num_parallel_calls=24)
+    # dataset = dataset.map(lambda x, y: (x, y - tf.reduce_mean(y)), num_parallel_calls=24)
 
     # batch the examples
     dataset = dataset.batch(batch_size=batch)
@@ -63,7 +65,7 @@ def train_inputs():
 
 def eval_inputs():
     dataset = read_and_decode(test_path)
-    dataset = dataset.map(lambda x, y: (x*50, y*50), num_parallel_calls=24)
+    # dataset = dataset.map(lambda x, y: (x, y), num_parallel_calls=24)
     dataset = dataset.batch(1)
     return dataset
 

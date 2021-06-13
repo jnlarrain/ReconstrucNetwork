@@ -6,33 +6,8 @@ import tensorflow as tf
 import ants
 import numpy as np
 from model.estimator import Estimator
+from testing_tools import *
 
-
-def central_crop(image, size):
-    def delta(size1, size2):
-        diff = np.abs(size1 - size2)
-        _delta = diff // 2
-        return _delta
-
-    image = np.squeeze(image)
-    shape = image.shape
-    dx = delta(shape[0], size[0])
-    dy = delta(shape[1], size[1])
-    dz = delta(shape[2], size[2])
-    image = image[dx:size[0] + dx, dy:size[1] + dy, dz:size[2] + dz]
-    image = np.expand_dims(image, [0, -1])
-    return image
-
-
-def open_nii_gz(path):
-    data = ants.image_read(path)
-    return np.expand_dims(data.numpy().astype('float32'), [0, -1]), data
-
-
-def from_numpy(elements):
-    data = tf.data.Dataset.from_tensor_slices((elements, elements))
-    data = data.batch(1)
-    return data
 
 image_name = 'rimg4\\e1'
 input_path = 'D:\\files\\tesis\invivo_uc\\{}'.format(image_name)

@@ -1,49 +1,50 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-import tensorflow as tf
-import ants
-import numpy as np
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 from model.estimator import Estimator
 from tqdm import tqdm
+from data_generator.dipole import dipole_kernel
+from testing_tools import *
 
-
-def central_crop(image, size):
-    def delta(size1, size2):
-        diff = np.abs(size1 - size2)
-        _delta = diff // 2
-        return _delta
-
-    image = np.squeeze(image)
-    shape = image.shape
-    print(shape)
-    dx = delta(shape[0], size[0])
-    dy = delta(shape[1], size[1])
-    dz = delta(shape[2], size[2])
-    image = image[dx:size[0] + dx, dy:size[1] + dy, dz:size[2] + dz]
-    image = np.expand_dims(image, [0, -1])
-    return image
-
-
-def open_nii_gz(path):
-    data = ants.image_read(path)
-    data = ants.reorient_image2(data, 'RAI')
-    return np.expand_dims(data.numpy().astype('float32'), [0, -1]), data
-
-
-def from_numpy(elements):
-    data = tf.data.Dataset.from_tensor_slices((elements, elements))
-    # data = data.unbatch()
-    data = data.batch(1)
-    return data
 
 output_path = 'D:\\files\\ReconstrucNetwork\\outputs\\SNR'
-input_path = 'D:\\files\\ReconstrucNetwork\\SNR1\\Sim1Snr1'
+input_path = '/SNR1/Sim1Snr1'
 image_pha, _ = open_nii_gz(os.path.join(input_path, 'Frequency.nii.gz'))
 image_mag, _ = open_nii_gz(os.path.join(input_path, 'MaskBrainExtracted.nii.gz'))
 ground, _ = open_nii_gz(os.path.join(input_path, 'GT', 'Chi.nii.gz'))
 
+
+image = np.pad(np.squeeze(ground), [[48, 48], [48, 48], [48, 48]])
+dipole = dipole_kernel(image.shape, [9e-6, 9e-6, 9e-6])
+image_pha = central_crop(image_pha, (160, 192, 192))
+image_mag = central_crop(image_mag, (160, 192, 192))
+image_mag = np.where(image_mag > 0, 1., 0.)
+
+
+gamma = 267.522e6
+TE = 3.6e-3
+B0 = 1.5
+
+image_pha /= TE
+image_pha /= B0
+image_pha /= gamma / 1e6
+
+image = np.concatenate([image_pha, image_mag], -1)
+# image -= np.mean(image)
+
+version = 'back_48'
+size = (*[96, ] * 3 + [1],)
+lr = 1e-3
+model = Estimator(lr, size, version)
+
+general_space = np.linspace(0, 3, 100)
+
+
+out = np.squeeze(np.array(list(model._estimator.predict(lambda: from_numpy(image)))))
+
+ants.image_write(ants.from_numpy(out),  'out_dipole2.nii.gz')
+
+exit()
 
 image_pha = central_crop(image_pha, (160, 192, 192))
 image_mag = central_crop(image_mag, (160, 192, 192))

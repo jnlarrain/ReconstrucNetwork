@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 class PerceptualLoss:
     # def __init__(self, model='model/loss_model/'):
     #     self.model = tf.saved_model.load(model)
@@ -16,11 +15,34 @@ class PerceptualLoss:
         _preds = _preds/maximo
         return _labels, _preds
 
+    # @tf.function
+    # def dipole_reg(self, preds, dipole, entrance):
+    #     def inner_reg(_pred, _entrance):
+    #         def fourier_shift(image):
+    #             image = tf.cast(image, tf.complex64)
+    #             img = tf.signal.fft3d(image)
+    #             return img
+    #
+    #         def fourier_inverse(fourier):
+    #             fourier = tf.cast(fourier, tf.complex64)
+    #             img = tf.math.real(tf.signal.ifft3d(fourier))
+    #             return img
+    #         _pred = tf.squeeze(_pred)
+    #         _entrance = tf.squeeze(_entrance)
+    #         final_prediction = fourier_inverse(fourier_shift(_pred) * tf.cast(tf.squeeze(dipole), tf.complex64))
+    #         return self.l2(tf.cast(final_prediction, tf.float32), _entrance)
+    #     loss = tf.reduce_sum(tf.map_fn(lambda x: inner_reg(preds[int(x)], entrance[int(x), 0]),
+    #                                    tf.cast(tf.linspace(0, 3, 4), tf.int8)))/4
+    #     return loss
+
+
+
     @tf.function
-    def loss(self, labels, preds):
+    def loss(self, labels, preds, entrance):
         # labels, preds = self.norm_image(labels, preds)
         # [loss] = tf.py_function(self.perceptual, [self, labels, preds], [tf.float32])
         loss = self.l2(labels, preds) #+ self.l1(labels, preds)/100  # + self.regulator(preds, 2e-7)
+        # loss += self.dipole_reg(preds, labels[..., 1], entrance[..., 0])
         # loss += self.perceptual(labels, preds)
         return loss
 

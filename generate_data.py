@@ -9,7 +9,7 @@ El algoritmo utiliza la formula teorica y no la convolucion del dipolo
 
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 from tqdm import tqdm
 from random import randint
@@ -19,35 +19,40 @@ from data_generator.create_one_image import Data
 from threading import Thread
 from os import walk
 import tensorflow as tf
+import ants
+import numpy as np
 physical_devices = tf.config.list_physical_devices('GPU')
 for gpu in physical_devices:
     tf.config.experimental.set_memory_growth(gpu, True)
 
-size = 96
+size = 48
 threads_number = 24
 FOV = [size, size, size]
 
+
+disk = 'D:/'
+
 # tfrecords path
-train_tfrecord_path_00 = 'F:/' + str(size) + 'data_normal/train/'
-test_tfrecord_path_00 = 'F:/' + str(size) + 'data_normal/test/'
-train_tfrecord_path_10 = 'F:/' + str(size) + 'data_back/train/'
-test_tfrecord_path_10 = 'F:/' + str(size) + 'data_back/test/'
-train_tfrecord_path_01 = 'F:/' + str(size) + 'data_noise/train/'
-test_tfrecord_path_01 = 'F:/' + str(size) + 'data_noise/test/'
-train_tfrecord_path_11 = 'F:/' + str(size) + 'data/train/'
-test_tfrecord_path_11 = 'F:/' + str(size) + 'data/test/'
+train_tfrecord_path_00 = disk + str(size) + 'data_normal/train/'
+test_tfrecord_path_00 = disk + str(size) + 'data_normal/test/'
+train_tfrecord_path_10 = disk + str(size) + 'data_back/train/'
+test_tfrecord_path_10 = disk + str(size) + 'data_back/test/'
+train_tfrecord_path_01 = disk + str(size) + 'data_noise/train/'
+test_tfrecord_path_01 = disk + str(size) + 'data_noise/test/'
+train_tfrecord_path_11 = disk + str(size) + 'data/train/'
+test_tfrecord_path_11 = disk + str(size) + 'data/test/'
 
-if not os.path.exists('F:/' + str(size) + 'data'):
-    os.mkdir('F:/' + str(size) + 'data')
+if not os.path.exists(disk + str(size) + 'data'):
+    os.mkdir(disk + str(size) + 'data')
 
-if not os.path.exists('F:/' + str(size) + 'data_normal'):
-    os.mkdir('F:/' + str(size) + 'data_normal')
+if not os.path.exists(disk + str(size) + 'data_normal'):
+    os.mkdir(disk + str(size) + 'data_normal')
 
-if not os.path.exists('F:/' + str(size) + 'data_back'):
-    os.mkdir('F:/' + str(size) + 'data_back')
+if not os.path.exists(disk + str(size) + 'data_back'):
+    os.mkdir(disk + str(size) + 'data_back')
 
-if not os.path.exists('F:/' + str(size) + 'data_noise'):
-    os.mkdir('F:/' + str(size) + 'data_noise')
+if not os.path.exists(disk + str(size) + 'data_noise'):
+    os.mkdir(disk + str(size) + 'data_noise')
 
 if not os.path.exists(train_tfrecord_path_00):
     os.mkdir(train_tfrecord_path_00)
@@ -84,9 +89,9 @@ datos_train_01 = list(walk(train_tfrecord_path_01))[0][2]
 datos_test_11 = list(walk(test_tfrecord_path_11))[0][2]
 datos_train_11 = list(walk(train_tfrecord_path_11))[0][2]
 
-num_cilindros = 128
-num_esferas = 512
-susceptibilidad_interna = 2 * 1e-8
+num_cilindros = 32
+num_esferas = 128
+susceptibilidad_interna = 2 * 1e-7 # 1e-8
 susceptibilidad_externa = 0     # 9 * 1e-6
 susceptibilidad_foco_externo = 1e-1
 fov_foco_ext = [size*3, ]*3
@@ -116,8 +121,8 @@ def training_data(file, num_esferas, num_cilindros, path):
         convert_tfrecords(phase, magnitud, susceptibilidad, train_tfrecord_path_00 + str(file))
     else:
         convert_tfrecords(phase, magnitud, susceptibilidad, test_tfrecord_path_00 + str(file))
-    # ants.image_write(ants.from_numpy(np.squeeze(susceptibilidad)), path + str(file) + 'sus.nii.gz')
-    # ants.image_write(ants.from_numpy(np.squeeze(phase)), path + str(file) + 'phase.nii.gz')
+    ants.image_write(ants.from_numpy(np.squeeze(susceptibilidad)), path + str(file) + 'sus.nii.gz')
+    ants.image_write(ants.from_numpy(np.squeeze(phase)), path + str(file) + 'phase.nii.gz')
     # ants.image_write(ants.from_numpy(np.squeeze(magnitud)), path + str(file) + 'mag.nii.gz')
 
     phase2 = phase.copy()
