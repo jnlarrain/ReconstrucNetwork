@@ -20,7 +20,7 @@ for gpu in physical_devices:
     tf.config.experimental.set_memory_growth(gpu, True)
 from data_generator.dipole import dipole_kernel
 from data_generator.figures.K_space import calculate_k
-from testing_tools import *
+from testing.testing_tools.tools import *
 
 
 def foco_externo(number, fov, _susceptibilidad, _radio=False):

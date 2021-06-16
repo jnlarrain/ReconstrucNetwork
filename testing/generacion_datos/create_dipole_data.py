@@ -3,7 +3,7 @@ import os
 import ants
 from data_generator.dipole import dipole_kernel
 from tqdm import tqdm
-from testing_tools import ifft, fft
+from testing.testing_tools.tools import ifft, fft
 
 size = 96
 

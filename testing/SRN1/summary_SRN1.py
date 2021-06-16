@@ -1,6 +1,6 @@
 import os
 from tqdm import tqdm
-from testing_tools import *
+from testing.testing_tools.tools import *
 
 output_path = 'D:\\files\\ReconstrucNetwork\\outputs\\SNR'
 input_path = '/SNR1/Sim1Snr1'

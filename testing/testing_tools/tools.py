@@ -3,6 +3,10 @@ import numpy as np
 import tensorflow as tf
 
 
+def prediccion():
+    return
+
+
 def delta(size1, size2):
     diff = np.abs(size1 - size2)
     _delta = diff // 2
