@@ -11,3 +11,7 @@
 *.ckpt
 *.DESKTOP-9BB2DTS
 *.mat
+*.ckpt
+*.pyc
+*.meta
+*.index

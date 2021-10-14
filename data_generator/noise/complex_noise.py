@@ -6,7 +6,7 @@ import numpy as np
 from random import uniform
 
 
-def add_complex_noise(magnitud, phase, norm=False, SNR=384): #256 mucho ruido 1024 muy poco
+def add_complex_noise(magnitud, phase, SNR=1024): #256 mucho ruido 1024 muy poco
     """
     funcion para agregar el ruido en radianes
 

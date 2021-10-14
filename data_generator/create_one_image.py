@@ -38,8 +38,9 @@ class Data:
         self.field_of_view = [size, ]*3
         self.numero_esferas = numero_esferas
         self.numero_cilindros = numero_cilindros
-        self.range_center = [size // 4, size // 4 * 3]
-        self.range_radio = [4, size // 6]
+        # self.range_center = [size // 4, size // 4 * 3]
+        self.range_center = [0, size - 1]
+        self.range_radio = [4, size // 4]
         self.c_range = 8  # rango en que los radios de los cilindros son mas pequeños
         self.sus_in = susceptibilidad_interna
         self.sus_ex = susceptibildad_externa
@@ -127,7 +128,7 @@ class Data:
 
         """
         if not _radio:
-            _radio = [1, fov[0] // 20]
+            _radio = [10, 20]
         background = np.zeros(self.field_of_view)
         posible_range = [x for x in range(fov[0]) if x < int(fov[0] // 8) or x > int(fov[0] // 8 * 7)]
         for _ in range(number):

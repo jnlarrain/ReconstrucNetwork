@@ -41,8 +41,5 @@ def open_nii_gz(path):
 
 def from_numpy(elements):
     data = tf.data.Dataset.from_tensor_slices((elements, elements))
-    # data = data.unbatch()
     data = data.batch(1)
     return data
-
-
