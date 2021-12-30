@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .model import Network
+from .model2 import Network
 from .tensorboard_images import ImageShower
 from .losses import Loss
 

@@ -13,5 +13,11 @@
 *.mat
 *.ckpt
 *.pyc
+*.nii
+*.cpython-37.pyc
 *.meta
 *.index
+
+### directories ###
+logs
+challenge
