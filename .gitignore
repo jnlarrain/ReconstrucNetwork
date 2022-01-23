@@ -17,7 +17,14 @@
 *.cpython-37.pyc
 *.meta
 *.index
+*.xml
+*.png
+*.gz
 
 ### directories ###
 logs
 challenge
+invivo
+different_scale
+original_mat
+data_phase
