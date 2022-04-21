@@ -5,8 +5,11 @@ class Loss:
     @tf.function
     def loss(self, labels, preds):
         with tf.device("cpu"):
-            loss = self.l2(labels, preds) + self.l1(labels, preds) / 10 + self.regulator(preds, 2e-9)
-            # loss = self.l1(labels, preds) + self.regulator(preds, 1e-9)
+            loss = (
+                self.l2(labels, preds)
+                + self.l1(labels, preds) / 10
+                + self.regulator(preds, 2e-9)
+            )
         return loss
 
     @staticmethod
@@ -49,6 +52,8 @@ class Loss:
     def regulator(self, volume, alpha):
         pixel_dif1, pixel_dif2, pixel_dif3 = self.gradient_variability(volume)
         total_var = tf.reduce_sum(
-            tf.reduce_sum(tf.abs(pixel_dif1)) + tf.reduce_sum(tf.abs(pixel_dif2)) + tf.reduce_sum(tf.abs(pixel_dif3))
+            tf.reduce_sum(tf.abs(pixel_dif1))
+            + tf.reduce_sum(tf.abs(pixel_dif2))
+            + tf.reduce_sum(tf.abs(pixel_dif3))
         )
         return total_var * alpha
